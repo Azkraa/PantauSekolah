@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PantauSekolah - Dashboard Pengawas & Sekolah</title>
+
+    <!-- FAVICON -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen relative overflow-x-hidden">
+
+    <!-- CONTAINER TOAST NOTIFICATION RESPONSIVE -->
+    <div id="toast-container"
+        class="fixed bottom-4 sm:bottom-auto sm:top-5 right-4 sm:right-5 left-4 sm:left-auto z-50 flex flex-col gap-2.5 pointer-events-none">
+    </div>
+
+    <!-- OVERLAY SIDEBAR MOBILE -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()"
+        class="fixed inset-0 bg-slate-900/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- MODAL VERIFIKASI LAPORAN -->
+    <div id="modal-verifikasi"
+        class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-check text-blue-600"></i> Verifikasi Laporan
+                </h3>
+                <button onclick="closeModalVerifikasi()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div>
+                <p id="modal-id-laporan" class="text-xs font-semibold text-blue-600 mb-0.5"></p>
+                <p id="modal-user-name" class="text-xs sm:text-sm font-bold text-slate-800 mb-3"></p>
+
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Status Verifikasi</label>
+                <select id="modal-status"
+                    class="w-full border border-slate-300 p-2.5 rounded-xl mb-3 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="Disetujui">✅ Disetujui</option>
+                    <option value="Perlu Perbaikan">⚠️ Perlu Perbaikan</option>
+                    <option value="Ditolak">❌ Ditolak</option>
+                </select>
+
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Catatan Verifikasi</label>
+                <textarea id="modal-catatan" rows="3"
+                    class="w-full border border-slate-300 p-2.5 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500"
+                    placeholder="Masukkan saran atau catatan khusus..."></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button onclick="closeModalVerifikasi()"
+                    class="px-3.5 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200">Batal</button>
+                <button onclick="simpanVerifikasi()" id="btn-simpan-verifikasi"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 shadow-md">Simpan
+                    Verifikasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HALAMAN LOGIN (Presisi & Rapi) -->
+    <div id="login-section"
+        class="fixed inset-0 z-40 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 flex items-center justify-center p-4">
+        <div class="glass-effect p-6 sm:p-10 rounded-3xl shadow-2xl w-full max-w-md border border-white/20">
+            <div class="text-center mb-6 sm:mb-8">
+                <div
+                    class="bg-blue-600 text-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-school text-2xl sm:text-3xl"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800">PantauSekolah</h2>
+                <p class="text-slate-500 text-[11px] sm:text-xs mt-1 font-medium">Sistem Informasi Pengawasan &
+                    Pelaporan</p>
+            </div>
+
+            <div class="space-y-3.5 sm:space-y-4">
+                <div>
+                    <label
+                        class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Username</label>
+                    <div class="relative flex items-center">
+                        <i class="fa-regular fa-user absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                        <input type="text" id="input-username"
+                            class="w-full border border-slate-300 pl-10 pr-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white/80 font-medium placeholder:text-slate-400"
+                            placeholder="Masukkan Username">
+                    </div>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Password</label>
+                    <div class="relative flex items-center">
+                        <i class="fa-solid fa-lock absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                        <input type="password" id="input-password"
+                            class="w-full border border-slate-300 pl-10 pr-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white/80 font-medium placeholder:text-slate-400"
+                            placeholder="Masukkan Password">
+                    </div>
+                </div>
+
+                <button onclick="login()" id="btn-login"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 sm:py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all duration-200 text-xs sm:text-sm flex items-center justify-center gap-2 mt-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi
+                </button>
+
+                <div id="loading-login" class="hidden text-center text-xs text-blue-600 font-semibold mt-2">
+                    <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Memeriksa kredensial...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="dashboard-section" class="hidden w-full flex flex-col md:flex-row min-h-screen">
+
+        <!-- SIDEBAR (RESPONSIVE DRAWER FOR MOBILE) -->
+        <aside id="main-sidebar"
+            class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col justify-between border-r border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
+            <div>
+                <!-- Brand Logo & Close Button Mobile -->
+                <div class="p-5 sm:p-6 flex items-center justify-between border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="bg-blue-600 text-white w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
+                            <i class="fa-solid fa-school text-base sm:text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-white text-sm sm:text-base leading-tight">PantauSekolah</h1>
+                            <p class="text-[10px] text-slate-400 font-medium">Pengawasan SD Interaktif</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-white p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Menu -->
+                <nav class="p-3 sm:p-4 space-y-1.5">
+                    <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Menu Utama</p>
+
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard"
+                        class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-chart-pie text-sm w-5"></i> Dashboard & Grafik
+                    </button>
+
+                    <button onclick="switchTab('verifikasi-kepsek')" id="nav-verifikasi-kepsek"
+                        class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-user-tie text-sm w-5"></i> Laporan Kepsek
+                    </button>
+
+                    <button onclick="switchTab('verifikasi-guru')" id="nav-verifikasi-guru"
+                        class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-chalkboard-user text-sm w-5"></i> Laporan Guru
+                    </button>
+
+                    <button onclick="switchTab('upload')" id="nav-upload"
+                        class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-cloud-arrow-up text-sm w-5"></i> Upload Laporan
+                    </button>
+                </nav>
+            </div>
+
+            <!-- User Info & Logout -->
+            <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+                <div class="flex items-center justify-between">
+                    <div class="truncate pr-2">
+                        <p id="user-info-name" class="text-xs font-bold text-white truncate"></p>
+                        <span id="user-info-role"
+                            class="text-[10px] font-semibold text-blue-400 bg-blue-950/60 border border-blue-800/50 px-2 py-0.5 rounded-md inline-block mt-0.5"></span>
+                    </div>
+                    <button onclick="logout()" title="Keluar Akun"
+                        class="text-slate-400 hover:text-red-400 p-2 rounded-lg hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-power-off text-xs sm:text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 bg-slate-100 flex flex-col min-w-0 h-screen overflow-y-auto">
+
+            <!-- TOP NAVBAR RESPONSIVE -->
+            <header
+                class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3.5 sticky top-0 z-20 flex justify-between items-center shadow-sm gap-2">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button onclick="toggleMobileSidebar()"
+                        class="md:hidden bg-slate-100 text-slate-700 p-2 rounded-xl text-sm hover:bg-slate-200 transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="truncate">
+                        <h2 id="page-title" class="text-sm sm:text-lg font-bold text-slate-800 truncate">Dashboard Utama
+                        </h2>
+                        <p id="page-subtitle" class="text-[10px] sm:text-xs text-slate-500 truncate hidden sm:block">
+                            Ringkasan aktivitas dan grafik performa laporan</p>
+                    </div>
+                </div>
+                <button onclick="loadDashboardData()"
+                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 sm:gap-2 border border-slate-200 flex-shrink-0">
+                    <i class="fa-solid fa-rotate text-blue-600 text-xs sm:text-sm"></i> <span
+                        class="hidden sm:inline">Refresh Data</span>
+                </button>
+            </header>
+
+            <!-- TAB CONTENT CONTAINER -->
+            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1">
+
+                <!-- 1. TAB DASHBOARD UTAMA -->
+                <div id="tab-dashboard" class="space-y-4 sm:space-y-6">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div
+                            class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3 sm:gap-4">
+                            <div
+                                class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                                    Total</p>
+                                <h3 id="stat-total" class="text-xl sm:text-2xl font-extrabold text-slate-800">0</h3>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3 sm:gap-4">
+                            <div
+                                class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                                    Disetujui</p>
+                                <h3 id="stat-disetujui" class="text-xl sm:text-2xl font-extrabold text-slate-800">0</h3>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3 sm:gap-4">
+                            <div
+                                class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                                    Menunggu</p>
+                                <h3 id="stat-menunggu" class="text-xl sm:text-2xl font-extrabold text-slate-800">0</h3>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3 sm:gap-4">
+                            <div
+                                class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                                    Revisi</p>
+                                <h3 id="stat-revisi" class="text-xl sm:text-2xl font-extrabold text-slate-800">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <h4
+                                class="text-xs sm:text-sm font-bold text-slate-800 mb-3 sm:mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-blue-600"></i> Distribusi Status Laporan
+                            </h4>
+                            <div class="relative h-48 sm:h-64 flex items-center justify-center">
+                                <canvas id="chartStatus"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <h4
+                                class="text-xs sm:text-sm font-bold text-slate-800 mb-3 sm:mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-column text-indigo-600"></i> Laporan Kepsek vs Guru
+                            </h4>
+                            <div class="relative h-48 sm:h-64 flex items-center justify-center">
+                                <canvas id="chartPerbandingan"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex justify-between items-center mb-4 sm:mb-6">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-list-timeline text-blue-600"></i> Aktivitas Laporan Terbaru
+                            </h4>
+                            <span class="text-[10px] sm:text-xs text-slate-400 font-medium">Real-time</span>
+                        </div>
+                        <div id="activity-feed" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- 2. TAB LAPORAN KEPALA SEKOLAH -->
+                <div id="tab-verifikasi-kepsek" class="hidden space-y-4 sm:space-y-6">
+                    <div id="cards-container-kepsek" class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-700">Pilih Sekolah Binaan:</h3>
+                            <span
+                                class="text-[10px] sm:text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">Langkah
+                                1 dari 3</span>
+                        </div>
+                        <div id="grid-cards-kepsek"
+                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"></div>
+                    </div>
+
+                    <div id="subcards-container-kepsek" class="hidden space-y-4">
+                        <div
+                            class="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm gap-2">
+                            <button onclick="backToFolderKepsek()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border flex-shrink-0">
+                                <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Kembali</span>
+                            </button>
+                            <div class="truncate text-right sm:text-left">
+                                <h3 id="selected-school-title-kepsek"
+                                    class="font-bold text-slate-800 text-xs sm:text-base truncate">SD 04 Pinoh</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400">Pilih jenis pelaporan</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                            <div onclick="openSubFolderTable('kepsek', 'Mingguan')"
+                                class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-500 transition-all cursor-pointer group flex items-center justify-between">
+                                <div class="flex items-center gap-3.5">
+                                    <div
+                                        class="w-12 h-12 sm:w-14 sm:h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold group-hover:bg-blue-600 group-hover:text-white transition-all flex-shrink-0">
+                                        <i class="fa-solid fa-calendar-week"></i>
+                                    </div>
+                                    <div>
+                                        <h4
+                                            class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-blue-600 transition-colors">
+                                            Laporan Mingguan</h4>
+                                        <p class="text-[11px] sm:text-xs text-slate-400">Rutin Mingguan</p>
+                                        <span id="count-mingguan-kepsek"
+                                            class="inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100">0
+                                            Laporan</span>
+                                    </div>
+                                </div>
+                                <i
+                                    class="fa-solid fa-chevron-right text-slate-300 group-hover:text-blue-600 text-xs sm:text-sm"></i>
+                            </div>
+
+                            <div onclick="openSubFolderTable('kepsek', 'Daring')"
+                                class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-500 transition-all cursor-pointer group flex items-center justify-between">
+                                <div class="flex items-center gap-3.5">
+                                    <div
+                                        class="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold group-hover:bg-indigo-600 group-hover:text-white transition-all flex-shrink-0">
+                                        <i class="fa-solid fa-laptop-code"></i>
+                                    </div>
+                                    <div>
+                                        <h4
+                                            class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-indigo-600 transition-colors">
+                                            Laporan Daring</h4>
+                                        <p class="text-[11px] sm:text-xs text-slate-400">Kegiatan & Supervisi</p>
+                                        <span id="count-daring-kepsek"
+                                            class="inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100">0
+                                            Laporan</span>
+                                    </div>
+                                </div>
+                                <i
+                                    class="fa-solid fa-chevron-right text-slate-300 group-hover:text-indigo-600 text-xs sm:text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="table-container-kepsek" class="hidden space-y-4">
+                        <div
+                            class="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm gap-2">
+                            <button onclick="backToSubFolderKepsek()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border flex-shrink-0">
+                                <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Kembali</span>
+                            </button>
+                            <div class="truncate text-right sm:text-left">
+                                <h3 id="table-title-kepsek"
+                                    class="font-bold text-slate-800 text-xs sm:text-base truncate">SD 04 Pinoh</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400">Daftar berkas terunggah</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs min-w-[640px]">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">ID / Tanggal</th>
+                                            <th class="p-3.5">Kepala Sekolah</th>
+                                            <th class="p-3.5">Kategori</th>
+                                            <th class="p-3.5">Dokumen</th>
+                                            <th class="p-3.5">Status</th>
+                                            <th class="p-3.5">Catatan</th>
+                                            <th class="p-3.5 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body-kepsek" class="divide-y divide-slate-100 text-slate-600">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. TAB LAPORAN GURU -->
+                <div id="tab-verifikasi-guru" class="hidden space-y-4 sm:space-y-6">
+                    <div id="cards-container-guru" class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-700">Pilih Sekolah:</h3>
+                            <span
+                                class="text-[10px] sm:text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">Langkah
+                                1 dari 3</span>
+                        </div>
+                        <div id="grid-cards-guru" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                        </div>
+                    </div>
+
+                    <div id="subcards-container-guru" class="hidden space-y-4">
+                        <div
+                            class="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm gap-2">
+                            <button onclick="backToFolderGuru()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border flex-shrink-0">
+                                <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Kembali</span>
+                            </button>
+                            <div class="truncate text-right sm:text-left">
+                                <h3 id="selected-school-title-guru"
+                                    class="font-bold text-slate-800 text-xs sm:text-base truncate">SD 04 Pinoh</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400">Pilih jenis pelaporan</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                            <div onclick="openSubFolderTable('guru', 'Mingguan')"
+                                class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-500 transition-all cursor-pointer group flex items-center justify-between">
+                                <div class="flex items-center gap-3.5">
+                                    <div
+                                        class="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold group-hover:bg-emerald-600 group-hover:text-white transition-all flex-shrink-0">
+                                        <i class="fa-solid fa-calendar-week"></i>
+                                    </div>
+                                    <div>
+                                        <h4
+                                            class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-emerald-600 transition-colors">
+                                            Laporan Mingguan</h4>
+                                        <p class="text-[11px] sm:text-xs text-slate-400">KBM & RPP</p>
+                                        <span id="count-mingguan-guru"
+                                            class="inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-100">0
+                                            Laporan</span>
+                                    </div>
+                                </div>
+                                <i
+                                    class="fa-solid fa-chevron-right text-slate-300 group-hover:text-emerald-600 text-xs sm:text-sm"></i>
+                            </div>
+
+                            <div onclick="openSubFolderTable('guru', 'Daring')"
+                                class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500 transition-all cursor-pointer group flex items-center justify-between">
+                                <div class="flex items-center gap-3.5">
+                                    <div
+                                        class="w-12 h-12 sm:w-14 sm:h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold group-hover:bg-teal-600 group-hover:text-white transition-all flex-shrink-0">
+                                        <i class="fa-solid fa-laptop-code"></i>
+                                    </div>
+                                    <div>
+                                        <h4
+                                            class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-teal-600 transition-colors">
+                                            Laporan Daring</h4>
+                                        <p class="text-[11px] sm:text-xs text-slate-400">Kelas & Online</p>
+                                        <span id="count-daring-guru"
+                                            class="inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 rounded-md border border-teal-100">0
+                                            Laporan</span>
+                                    </div>
+                                </div>
+                                <i
+                                    class="fa-solid fa-chevron-right text-slate-300 group-hover:text-teal-600 text-xs sm:text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="table-container-guru" class="hidden space-y-4">
+                        <div
+                            class="flex items-center justify-between bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm gap-2">
+                            <button onclick="backToSubFolderGuru()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border flex-shrink-0">
+                                <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Kembali</span>
+                            </button>
+                            <div class="truncate text-right sm:text-left">
+                                <h3 id="table-title-guru"
+                                    class="font-bold text-slate-800 text-xs sm:text-base truncate">SD 04 Pinoh</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400">Daftar berkas terunggah</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs min-w-[640px]">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">ID / Tanggal</th>
+                                            <th class="p-3.5">Nama Guru</th>
+                                            <th class="p-3.5">Kategori</th>
+                                            <th class="p-3.5">Dokumen</th>
+                                            <th class="p-3.5">Status</th>
+                                            <th class="p-3.5">Catatan</th>
+                                            <th class="p-3.5 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body-guru" class="divide-y divide-slate-100 text-slate-600">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. TAB UPLOAD LAPORAN -->
+                <div id="tab-upload" class="hidden max-w-2xl mx-auto space-y-4">
+                    <div class="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex items-center gap-3 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b border-slate-100">
+                            <div
+                                class="bg-blue-50 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-800">Form Unggah Laporan Baru</h3>
+                                <p class="text-[11px] sm:text-xs text-slate-400">Pilih jenis pelaporan dan unggah berkas
+                                </p>
+                            </div>
+                        </div>
+
+                        <form id="upload-form" class="space-y-4 sm:space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Jenis
+                                    Pelaporan</label>
+                                <div class="relative">
+                                    <select id="jenis-pelaporan"
+                                        class="w-full border border-slate-300 p-2.5 sm:p-3 rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none bg-slate-50 text-slate-700 text-xs font-semibold">
+                                        <option value="Mingguan">📅 Laporan Mingguan</option>
+                                        <option value="Daring">💻 Laporan Daring</option>
+                                    </select>
+                                    <i
+                                        class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Pilih Kategori
+                                    Laporan</label>
+                                <div class="relative">
+                                    <select id="kategori-laporan"
+                                        class="w-full border border-slate-300 p-2.5 sm:p-3 rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none bg-slate-50 text-slate-700 text-xs font-semibold"></select>
+                                    <i
+                                        class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Pilih File (PDF /
+                                    JPG / PNG)</label>
+                                <div
+                                    class="border-2 border-dashed border-slate-300 rounded-xl p-5 sm:p-6 text-center hover:bg-slate-50 transition-colors relative cursor-pointer group">
+                                    <input type="file" id="file-upload"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        accept=".pdf, .jpg, .jpeg, .png" onchange="updateFileName()">
+                                    <i
+                                        class="fa-regular fa-file-pdf text-3xl sm:text-4xl text-slate-400 mb-2 group-hover:text-blue-500 transition-colors"></i>
+                                    <p class="text-xs font-semibold text-slate-600">Klik di sini untuk memilih berkas
+                                        dari HP/Komputer</p>
+                                    <p id="file-name-display" class="text-xs text-blue-600 font-bold mt-2 hidden"></p>
+                                </div>
+                            </div>
+
+                            <button type="button" onclick="kirimLaporan()" id="btn-submit"
+                                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 sm:p-3.5 rounded-xl font-bold shadow-lg shadow-emerald-600/20 hover:shadow-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Kirim Laporan Sekarang
+                            </button>
+
+                            <div id="loading-indicator"
+                                class="hidden text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-xl mb-1"></i>
+                                <p class="text-xs text-blue-800 font-semibold">Sedang mengunggah berkas ke Google
+                                    Drive...<br>Mohon tunggu sebentar.</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT LOGIKA APLIKASI -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxRc_rfQZvH7U1OI6gyRuZtvUyNjMSIM1uzqeFBs7gDt3ZDgO7sIenQ-ELTG4XM9r5W/exec";
+
+        let currentUser = { nama: "", role: "", asal_sekolah: "" };
+        let globalData = { reportsKepsek: [], reportsGuru: [], allActivity: [] };
+
+        let selectedSchoolState = "";
+        let selectedTypeState = "";
+        let activeSelectedId = "";
+        let activeTargetSheet = "";
+
+        let chartStatusInstance = null;
+        let chartPerbandinganInstance = null;
+
+        // HAMBURGER TOGGLE FOR MOBILE
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById("main-sidebar");
+            const overlay = document.getElementById("sidebar-overlay");
+            sidebar.classList.toggle("-translate-x-full");
+            overlay.classList.toggle("hidden");
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const isSuccess = type === 'success';
+            const borderColor = isSuccess ? 'border-emerald-500' : 'border-rose-500';
+            const iconClass = isSuccess ? 'fa-circle-check text-emerald-500' : 'fa-circle-exclamation text-rose-500';
+            const title = isSuccess ? 'Berhasil' : 'Gagal';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 bg-white border-l-4 ${borderColor} shadow-xl rounded-xl p-3 sm:p-3.5 w-full sm:min-w-[280px] sm:max-w-sm transform translate-y-2 sm:translate-y-0 sm:translate-x-full transition-all duration-300 ease-out opacity-0`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} text-lg sm:text-xl"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-xs text-slate-800">${title}</p>
+                    <p class="text-[11px] text-slate-600 mt-0.5 truncate">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 text-xs p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'sm:translate-x-full', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'sm:translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        async function login() {
+            const username = document.getElementById("input-username").value;
+            const password = document.getElementById("input-password").value;
+
+            if (!username || !password) {
+                showToast("Harap masukkan Username dan Password!", "error");
+                return;
+            }
+
+            document.getElementById("btn-login").classList.add("hidden");
+            document.getElementById("loading-login").classList.remove("hidden");
+
+            try {
+                let response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "login", username, password })
+                });
+
+                let result = await response.json();
+
+                if (result.status === "success") {
+                    currentUser = {
+                        nama: result.nama,
+                        role: result.role,
+                        asal_sekolah: result.asal_sekolah
+                    };
+
+                    document.getElementById("login-section").classList.add("hidden");
+                    document.getElementById("dashboard-section").classList.remove("hidden");
+
+                    document.getElementById("user-info-name").innerText = currentUser.nama;
+                    document.getElementById("user-info-role").innerText = `${currentUser.role} | ${currentUser.asal_sekolah || ''}`;
+
+                    setupRolePermissions();
+                    switchTab('dashboard');
+                    showToast(`Selamat datang, ${currentUser.nama}!`, "success");
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (error) {
+                showToast("Terjadi kesalahan koneksi saat login.", "error");
+            } finally {
+                document.getElementById("btn-login").classList.remove("hidden");
+                document.getElementById("loading-login").classList.add("hidden");
+            }
+        }
+
+        function logout() {
+            currentUser = { nama: "", role: "", asal_sekolah: "" };
+            document.getElementById("dashboard-section").classList.add("hidden");
+            document.getElementById("login-section").classList.remove("hidden");
+            document.getElementById("input-username").value = "";
+            document.getElementById("input-password").value = "";
+            showToast("Anda telah keluar dari aplikasi.", "success");
+        }
+
+        function setupRolePermissions() {
+            const navKepsek = document.getElementById("nav-verifikasi-kepsek");
+            const navGuru = document.getElementById("nav-verifikasi-guru");
+            const navUpload = document.getElementById("nav-upload");
+            const selectKategori = document.getElementById("kategori-laporan");
+
+            if (currentUser.role === "Pengawas") {
+                navKepsek.classList.remove("hidden");
+                navGuru.classList.remove("hidden");
+                navUpload.classList.add("hidden");
+            } else if (currentUser.role === "Kepala Sekolah" || currentUser.role === "Kepsek") {
+                navKepsek.classList.add("hidden");
+                navGuru.classList.remove("hidden");
+                navUpload.classList.remove("hidden");
+
+                selectKategori.innerHTML = `
+                    <option value="Manajerial">1. Manajerial (RKJM, RKAS)</option>
+                    <option value="Kewirausahaan">2. Kewirausahaan (Inovasi, Kemitraan)</option>
+                    <option value="Supervisi">3. Laporan Supervisi Guru</option>
+                `;
+            } else {
+                navKepsek.classList.add("hidden");
+                navGuru.classList.add("hidden");
+                navUpload.classList.remove("hidden");
+
+                selectKategori.innerHTML = `
+                    <option value="Perencanaan">1. Perencanaan (RPP, Silabus)</option>
+                    <option value="Pelaksanaan KBM">2. Pelaksanaan KBM (Jurnal, Foto)</option>
+                    <option value="Penilaian">3. Penilaian (Rekap Nilai, Soal)</option>
+                `;
+            }
+        }
+
+        function switchTab(tabName) {
+            // Auto-close sidebar on mobile after selecting a menu
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById("main-sidebar");
+                const overlay = document.getElementById("sidebar-overlay");
+                if (!sidebar.classList.contains("-translate-x-full")) {
+                    sidebar.classList.add("-translate-x-full");
+                    overlay.classList.add("hidden");
+                }
+            }
+
+            const tabs = ['dashboard', 'verifikasi-kepsek', 'verifikasi-guru', 'upload'];
+
+            tabs.forEach(tab => {
+                const elTab = document.getElementById(`tab-${tab}`);
+                const elNav = document.getElementById(`nav-${tab}`);
+                if (elTab) elTab.classList.add("hidden");
+                if (elNav) {
+                    elNav.classList.remove("bg-blue-600", "text-white", "shadow-lg", "shadow-blue-600/30");
+                    elNav.classList.add("text-slate-400");
+                }
+            });
+
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            const targetNav = document.getElementById(`nav-${tabName}`);
+            if (targetTab) targetTab.classList.remove("hidden");
+            if (targetNav) {
+                targetNav.classList.remove("text-slate-400");
+                targetNav.classList.add("bg-blue-600", "text-white", "shadow-lg", "shadow-blue-600/30");
+            }
+
+            const titleEl = document.getElementById("page-title");
+            const subTitleEl = document.getElementById("page-subtitle");
+
+            if (tabName === 'dashboard') {
+                titleEl.innerText = "Dashboard Utama";
+                subTitleEl.innerText = "Ringkasan aktivitas dan grafik statistik performa laporan";
+                loadDashboardData();
+            } else if (tabName === 'verifikasi-kepsek') {
+                titleEl.innerText = "Laporan Kepala Sekolah";
+                subTitleEl.innerText = "Folder per sekolah untuk laporan administrasi dan manajemen Kepala Sekolah";
+                backToFolderKepsek();
+            } else if (tabName === 'verifikasi-guru') {
+                titleEl.innerText = "Laporan Guru";
+                subTitleEl.innerText = "Folder per sekolah untuk laporan RPP dan pembelajaran Guru";
+                backToFolderGuru();
+            } else if (tabName === 'upload') {
+                titleEl.innerText = "Unggah Laporan Baru";
+                subTitleEl.innerText = "Kirimkan dokumen laporan Anda ke Google Drive & Sheets";
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                let response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "get_dashboard_data" })
+                });
+
+                let result = await response.json();
+
+                if (result.status === "success") {
+                    globalData = result;
+                    renderDashboardStats();
+                    renderCharts();
+                    renderActivityFeed();
+                    renderSchoolFolderCards('kepsek');
+                    renderSchoolFolderCards('guru');
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (error) {
+                showToast("Gagal memuat data dari server.", "error");
+            }
+        }
+
+        function renderDashboardStats() {
+            const all = globalData.allActivity;
+            let total = all.length;
+            let disetujui = 0;
+            let menunggu = 0;
+            let revisi = 0;
+
+            all.forEach(item => {
+                if (item.status === "Disetujui") disetujui++;
+                else if (item.status === "Perlu Perbaikan" || item.status === "Ditolak") revisi++;
+                else menunggu++;
+            });
+
+            document.getElementById("stat-total").innerText = total;
+            document.getElementById("stat-disetujui").innerText = disetujui;
+            document.getElementById("stat-menunggu").innerText = menunggu;
+            document.getElementById("stat-revisi").innerText = revisi;
+        }
+
+        function renderCharts() {
+            const all = globalData.allActivity;
+
+            let disetujui = all.filter(x => x.status === "Disetujui").length;
+            let menunggu = all.filter(x => x.status !== "Disetujui" && x.status !== "Perlu Perbaikan" && x.status !== "Ditolak").length;
+            let perbaikan = all.filter(x => x.status === "Perlu Perbaikan").length;
+            let ditolak = all.filter(x => x.status === "Ditolak").length;
+
+            const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+            if (chartStatusInstance) chartStatusInstance.destroy();
+
+            chartStatusInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Disetujui', 'Menunggu', 'Perlu Perbaikan', 'Ditolak'],
+                    datasets: [{
+                        data: [disetujui, menunggu, perbaikan, ditolak],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: window.innerWidth < 640 ? 9 : 11 } } } }
+                }
+            });
+
+            const countKepsek = globalData.reportsKepsek.length;
+            const countGuru = globalData.reportsGuru.length;
+
+            const ctxComp = document.getElementById('chartPerbandingan').getContext('2d');
+            if (chartPerbandinganInstance) chartPerbandinganInstance.destroy();
+
+            chartPerbandinganInstance = new Chart(ctxComp, {
+                type: 'bar',
+                data: {
+                    labels: ['Kepala Sekolah', 'Guru'],
+                    datasets: [{
+                        label: 'Jumlah Laporan Terunggah',
+                        data: [countKepsek, countGuru],
+                        backgroundColor: ['#2563eb', '#6366f1'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        function renderActivityFeed() {
+            const feedContainer = document.getElementById("activity-feed");
+            const all = globalData.allActivity;
+
+            if (all.length === 0) {
+                feedContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Belum ada aktivitas laporan tersimpan.</p>`;
+                return;
+            }
+
+            feedContainer.innerHTML = "";
+            all.slice(0, 5).forEach(item => {
+                let statusBadge = getStatusBadge(item.status);
+                let roleColor = item.sourceRole === "Kepala Sekolah" ? "bg-blue-100 text-blue-700" : "bg-indigo-100 text-indigo-700";
+
+                feedContainer.innerHTML += `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl gap-2.5 hover:border-slate-300 transition-colors">
+                        <div class="flex items-start gap-2.5 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="text-xs font-bold text-slate-800 truncate">${item.nama}</p>
+                                    <span class="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded ${roleColor}">${item.asalSekolah || 'SD 04 Pinoh'}</span>
+                                </div>
+                                <p class="text-[10px] sm:text-[11px] text-slate-500 mt-0.5"><span class="font-semibold text-slate-700">${item.kategori}</span> • ${item.tanggal}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2.5 self-end sm:self-auto flex-shrink-0">
+                            ${statusBadge}
+                            <a href="${item.fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-bold text-[11px] sm:text-xs flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-eye"></i> Buka
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function getStatusBadge(status) {
+            if (status === "Disetujui") return `<span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px]">✅ Disetujui</span>`;
+            if (status === "Perlu Perbaikan") return `<span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px]">⚠️ Perbaikan</span>`;
+            if (status === "Ditolak") return `<span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px]">❌ Ditolak</span>`;
+            return `<span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px]">⏳ Menunggu</span>`;
+        }
+
+        function renderSchoolFolderCards(type) {
+            const grid = document.getElementById(`grid-cards-${type}`);
+            const data = (type === 'kepsek') ? globalData.reportsKepsek : globalData.reportsGuru;
+
+            if (data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full bg-white p-6 sm:p-8 rounded-2xl text-center border text-slate-400 text-xs font-medium">Belum ada laporan terdaftar.</div>`;
+                return;
+            }
+
+            let grouped = {};
+            data.forEach(item => {
+                let school = item.asalSekolah || "SD 04 Pinoh";
+                if (!grouped[school]) grouped[school] = [];
+                grouped[school].push(item);
+            });
+
+            grid.innerHTML = "";
+            Object.keys(grouped).forEach(schoolName => {
+                let list = grouped[schoolName];
+                let total = list.length;
+                let pending = list.filter(x => x.status !== "Disetujui").length;
+
+                grid.innerHTML += `
+                    <div onclick="openSchoolFolder('${type}', '${schoolName}')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-blue-50/50 rounded-full -mr-6 -mt-6 pointer-events-none"></div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 sm:w-11 sm:h-11 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold group-hover:bg-blue-600 group-hover:text-white transition-all flex-shrink-0">
+                                <i class="fa-solid fa-folder-closed"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-slate-800 text-xs sm:text-sm group-hover:text-blue-600 transition-colors truncate">${schoolName}</h4>
+                                <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium">${total} Berkas Laporan</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="text-slate-500 text-[10px] sm:text-[11px] font-medium">Status</span>
+                            ${pending > 0
+                        ? `<span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-md text-[9px] sm:text-[10px]">${pending} Menunggu</span>`
+                        : `<span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-md text-[9px] sm:text-[10px]">Semua Disetujui</span>`
+                    }
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openSchoolFolder(type, schoolName) {
+            selectedSchoolState = schoolName;
+
+            document.getElementById(`cards-container-${type}`).classList.add("hidden");
+            document.getElementById(`subcards-container-${type}`).classList.remove("hidden");
+            document.getElementById(`table-container-${type}`).classList.add("hidden");
+
+            document.getElementById(`selected-school-title-${type}`).innerText = schoolName;
+
+            const rawData = (type === 'kepsek') ? globalData.reportsKepsek : globalData.reportsGuru;
+            const schoolReports = rawData.filter(x => (x.asalSekolah || "SD 04 Pinoh") === schoolName);
+
+            let countMingguan = schoolReports.filter(x => (x.jenisPelaporan || x.kategori || '').includes("Mingguan") || !(x.jenisPelaporan || x.kategori || '').includes("Daring")).length;
+            let countDaring = schoolReports.filter(x => (x.jenisPelaporan || x.kategori || '').includes("Daring")).length;
+
+            document.getElementById(`count-mingguan-${type}`).innerText = `${countMingguan} Laporan`;
+            document.getElementById(`count-daring-${type}`).innerText = `${countDaring} Laporan`;
+        }
+
+        function openSubFolderTable(type, subType) {
+            selectedTypeState = subType;
+
+            document.getElementById(`subcards-container-${type}`).classList.add("hidden");
+            document.getElementById(`table-container-${type}`).classList.remove("hidden");
+
+            document.getElementById(`table-title-${type}`).innerText = `${selectedSchoolState} - Laporan ${subType}`;
+
+            const tbody = document.getElementById(`table-body-${type}`);
+            const rawData = (type === 'kepsek') ? globalData.reportsKepsek : globalData.reportsGuru;
+            const targetSheet = (type === 'kepsek') ? "Laporan_Kepsek" : "Laporan_Guru";
+
+            const filteredData = rawData.filter(x => {
+                const matchSchool = (x.asalSekolah || "SD 04 Pinoh") === selectedSchoolState;
+                const reportType = x.jenisPelaporan || x.kategori || '';
+
+                if (subType === "Daring") {
+                    return matchSchool && reportType.includes("Daring");
+                } else {
+                    return matchSchool && !reportType.includes("Daring");
+                }
+            });
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 font-medium">Belum ada berkas untuk Laporan ${subType} di sekolah ini.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            filteredData.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="p-3 sm:p-3.5"><p class="font-bold text-slate-800">${item.id}</p><p class="text-[10px] text-slate-400">${item.tanggal}</p></td>
+                        <td class="p-3 sm:p-3.5 font-bold text-slate-800">${item.nama}</td>
+                        <td class="p-3 sm:p-3.5 font-medium">${item.kategori}</td>
+                        <td class="p-3 sm:p-3.5">
+                            <a href="${item.fileUrl}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-bold">
+                                <i class="fa-solid fa-file-pdf"></i> Preview
+                            </a>
+                        </td>
+                        <td class="p-3 sm:p-3.5">${getStatusBadge(item.status)}</td>
+                        <td class="p-3 sm:p-3.5 italic text-slate-500">${item.catatan}</td>
+                        <td class="p-3 sm:p-3.5 text-center">
+                            <button onclick="openModalVerifikasi('${item.id}', '${item.nama}', '${item.status}', '${item.catatan}', '${targetSheet}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow-sm">
+                                Verifikasi
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function backToFolderKepsek() {
+            document.getElementById("subcards-container-kepsek").classList.add("hidden");
+            document.getElementById("table-container-kepsek").classList.add("hidden");
+            document.getElementById("cards-container-kepsek").classList.remove("hidden");
+        }
+
+        function backToSubFolderKepsek() {
+            document.getElementById("table-container-kepsek").classList.add("hidden");
+            document.getElementById("subcards-container-kepsek").classList.remove("hidden");
+        }
+
+        function backToFolderGuru() {
+            document.getElementById("subcards-container-guru").classList.add("hidden");
+            document.getElementById("table-container-guru").classList.add("hidden");
+            document.getElementById("cards-container-guru").classList.remove("hidden");
+        }
+
+        function backToSubFolderGuru() {
+            document.getElementById("table-container-guru").classList.add("hidden");
+            document.getElementById("subcards-container-guru").classList.remove("hidden");
+        }
+
+        function openModalVerifikasi(id, nama, status, catatan, targetSheet) {
+            activeSelectedId = id;
+            activeTargetSheet = targetSheet;
+            document.getElementById("modal-id-laporan").innerText = "ID: " + id;
+            document.getElementById("modal-user-name").innerText = "Pengirim: " + nama;
+            document.getElementById("modal-status").value = (status !== "Menunggu Pengawas" && status !== "Menunggu Kepsek") ? status : "Disetujui";
+            document.getElementById("modal-catatan").value = (catatan !== "Belum ada catatan" && catatan !== "-") ? catatan : "";
+            document.getElementById("modal-verifikasi").classList.remove("hidden");
+        }
+
+        function closeModalVerifikasi() {
+            document.getElementById("modal-verifikasi").classList.add("hidden");
+            activeSelectedId = "";
+            activeTargetSheet = "";
+        }
+
+        async function simpanVerifikasi() {
+            const statusVerifikasi = document.getElementById("modal-status").value;
+            const catatanVerifikasi = document.getElementById("modal-catatan").value;
+            const btnSimpan = document.getElementById("btn-simpan-verifikasi");
+
+            btnSimpan.innerText = "Simpan...";
+            btnSimpan.disabled = true;
+
+            try {
+                let response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "verifikasi_laporan",
+                        idLaporan: activeSelectedId,
+                        targetSheet: activeTargetSheet,
+                        statusVerifikasi: statusVerifikasi,
+                        catatanVerifikasi: catatanVerifikasi
+                    })
+                });
+
+                let result = await response.json();
+
+                if (result.status === "success") {
+                    showToast("Verifikasi berhasil disimpan!", "success");
+                    closeModalVerifikasi();
+                    await loadDashboardData();
+                    if (selectedTypeState) {
+                        openSubFolderTable(activeTargetSheet === "Laporan_Kepsek" ? "kepsek" : "guru", selectedTypeState);
+                    }
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (error) {
+                showToast("Gagal menyimpan verifikasi.", "error");
+            } finally {
+                btnSimpan.innerText = "Simpan Verifikasi";
+                btnSimpan.disabled = false;
+            }
+        }
+
+        function updateFileName() {
+            const input = document.getElementById('file-upload');
+            const display = document.getElementById('file-name-display');
+            if (input.files.length > 0) {
+                display.innerText = "Berkas terpilih: " + input.files[0].name;
+                display.classList.remove('hidden');
+            }
+        }
+
+        async function kirimLaporan() {
+            const fileInput = document.getElementById('file-upload').files[0];
+            const jenisPelaporan = document.getElementById('jenis-pelaporan').value;
+            const kategoriSelect = document.getElementById('kategori-laporan').value;
+            const kategori = `[${jenisPelaporan}] ${kategoriSelect}`;
+
+            if (!fileInput) {
+                showToast("Harap pilih berkas laporan terlebih dahulu!", "error");
+                return;
+            }
+
+            document.getElementById('btn-submit').classList.add("hidden");
+            document.getElementById('loading-indicator').classList.remove("hidden");
+
+            const reader = new FileReader();
+            reader.readAsDataURL(fileInput);
+
+            reader.onload = async function () {
+                const fileBase64 = reader.result;
+
+                try {
+                    let response = await fetch(API_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "upload",
+                            nama: currentUser.nama,
+                            role: currentUser.role,
+                            asal_sekolah: currentUser.asal_sekolah,
+                            kategori: kategori,
+                            filename: fileInput.name,
+                            mimeType: fileInput.type,
+                            filebase64: fileBase64
+                        })
+                    });
+                    let result = await response.json();
+
+                    if (result.status === "success") {
+                        showToast("Dokumen telah berhasil tersimpan ke sistem!", "success");
+                        document.getElementById("upload-form").reset();
+                        document.getElementById('file-name-display').classList.add("hidden");
+                        switchTab('dashboard');
+                    } else {
+                        showToast("Gagal mengirim: " + result.message, "error");
+                    }
+                } catch (error) {
+                    showToast("Terjadi kesalahan koneksi saat mengunggah berkas.", "error");
+                } finally {
+                    document.getElementById('btn-submit').classList.remove("hidden");
+                    document.getElementById('loading-indicator').classList.add("hidden");
+                }
+            };
+        }
+    </script>
+</body>
+
+</html>
